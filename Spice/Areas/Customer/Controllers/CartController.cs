@@ -239,8 +239,10 @@ namespace Spice.Areas.Customer.Controllers
             //---Finally, save changes
             await _db.SaveChangesAsync();
 
-            return RedirectToAction("Index", "Home");
-            //return RedirectToAction("Confirm", "Order", new { id = detailCart.OrderHeader.Id });
+            //---For testing purposes
+            //return RedirectToAction("Index", "Home");
+
+            return RedirectToAction("Confirm", "Order", new { id = detailCart.OrderHeader.Id });
 
         }
 
