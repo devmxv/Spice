@@ -12,6 +12,10 @@ using Spice.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Spice.Services;
+using Spice.Utility;
+using Stripe;
 
 namespace Spice
 {
@@ -33,11 +37,41 @@ namespace Spice
             //---This is required to validate mail, is going to be ommitted for this time
             //services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
             //    .AddEntityFrameworkStores<ApplicationDbContext>();
-            services.AddDefaultIdentity<IdentityUser>()
+            //---MXV:Identity role added so the register page can work
+            //---Options added so the lock of the account could work
+            services.AddIdentity<IdentityUser,IdentityRole>(options =>
+            {
+                options.Lockout.MaxFailedAccessAttempts = 3;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+            })
+                .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            //---MXV: Stripe settings
+            services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
+
+
+            //---MXV: Added to fix 
+            services.AddSingleton<IEmailSender, EmailSender>();
+
             services.AddControllersWithViews();
             //---MXV - Modified to use Razor Runtime Compilation
             services.AddRazorPages().AddRazorRuntimeCompilation();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = $"/Identity/Account/Login";
+                options.LogoutPath = $"/Identity/Account/Logout";
+                options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
+            });
+
+            //---MXV: Config for sessions to work
+            services.AddSession(options =>
+            {
+                options.Cookie.IsEssential = true;
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,9 +90,12 @@ namespace Spice
             }
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
+            app.UseCookiePolicy();
+            //---MXV: Added for sessions to work
+            app.UseSession();
             app.UseRouting();
-
+            //---MXV: More Stripe config
+            StripeConfiguration.SetApiKey(Configuration.GetSection("Stripe")["SecretKey"]);
             app.UseAuthentication();
             app.UseAuthorization();
 
@@ -70,6 +107,9 @@ namespace Spice
                     pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
             });
+            
         }
+
+
     }
 }
