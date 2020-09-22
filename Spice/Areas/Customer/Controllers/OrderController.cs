@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Spice.Data;
 using Spice.Models;
-using Spice.Models.VIewModels;
+using Spice.Models.ViewModels;
 using Spice.Utility;
 
 namespace Spice.Areas.Customer
@@ -116,24 +116,10 @@ namespace Spice.Areas.Customer
                     OrderDetails = await _db.OrderDetails.Where(o => o.OrderId == item.Id).ToListAsync()
                 };
                 //---Adding element to list
-                orderListVM.Orders.Add(individual);
+                orderDetailsVM.Add(individual);
             }
 
-            var count = orderListVM.Orders.Count;
-            //---Sort
-            orderListVM.Orders = orderListVM.Orders.OrderByDescending(
-                p => p.OrderHeader.Id).Skip((productPage - 1) * PageSize)
-                .Take(PageSize).ToList();
-
-            orderListVM.PagingInfo = new PagingInfo
-            {
-                CurrentPage = productPage,
-                ItemsPerPage = PageSize,
-                TotalItem = count,
-                urlParam = "/Customer/Order/OrderHistory?productPage=:"
-            };
-
-            return View(orderListVM);
+            return View(orderDetailsVM.OrderBy(o => o.OrderHeader.PickupTime).ToList());
         }
 
         //---get - Order details to be used in order history
@@ -147,8 +133,39 @@ namespace Spice.Areas.Customer
             orderDetailsViewModel.OrderHeader.ApplicationUser = await _db.ApplicationUser.FirstOrDefaultAsync(u => u.Id == orderDetailsViewModel.OrderHeader.UserId);
             //return partial view
             return PartialView("_IndividualOrderDetails", orderDetailsViewModel);
-
         }
+
+        //---Order status
+        [Authorize(Roles = SD.KitchenUser + "," + SD.ManagerUser)]
+        public async Task<IActionResult> OrderPrepare(int OrderId)
+        {
+            OrderHeader orderHeader = await _db.OrderHeader.FindAsync(OrderId);
+            orderHeader.Status = SD.StatusInProcess;
+            await _db.SaveChangesAsync();
+            return RedirectToAction("ManageOrder", "Order");
+        }
+
+        [Authorize(Roles = SD.KitchenUser + "," + SD.ManagerUser)]
+        public async Task<IActionResult> OrderReady(int OrderId)
+        {
+            OrderHeader orderHeader = await _db.OrderHeader.FindAsync(OrderId);
+            orderHeader.Status = SD.StatusReady;
+            await _db.SaveChangesAsync();
+
+            //---Add email to notify user
+
+            return RedirectToAction("ManageOrder", "Order");
+        }
+
+        [Authorize(Roles = SD.KitchenUser + "," + SD.ManagerUser)]
+        public async Task<IActionResult> OrderCancel(int OrderId)
+        {
+            OrderHeader orderHeader = await _db.OrderHeader.FindAsync(OrderId);
+            orderHeader.Status = SD.StatusCancelled;
+            await _db.SaveChangesAsync();
+            return RedirectToAction("ManageOrder", "Order");
+        }
+
     }
 
     

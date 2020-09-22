@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Spice.Data;
 using Spice.Models;
-using Spice.Models.VIewModels;
+using Spice.Models.ViewModels;
 using Spice.Utility;
 using Stripe;
 

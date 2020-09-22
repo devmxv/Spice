@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Spice.Models.VIewModels
+namespace Spice.Models.ViewModels
 {
     public class OrderDetailsViewModel
     {
