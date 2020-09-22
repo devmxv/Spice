@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Spice.Data;
 using Spice.Models;
 using Spice.Models.ViewModels;
+using Spice.Models.VIewModels;
 using Spice.Utility;
 
 namespace Spice.Areas.Customer
