@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Spice.Services;
 using Spice.Utility;
 using Stripe;
+using Microsoft.AspNetCore.Authentication.Facebook;
 
 namespace Spice
 {
@@ -49,6 +50,13 @@ namespace Spice
 
             //---MXV: Stripe settings
             services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
+
+            //---Facebook Integration
+            services.AddAuthentication().AddFacebook(FacebookOptions =>
+            {
+                FacebookOptions.AppId = "616953115644020";
+                FacebookOptions.AppSecret = "4a5d7b74d224f096b86eaf1431d3e0d0";
+            });
 
 
             //---MXV: Added to fix 
