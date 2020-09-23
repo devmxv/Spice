@@ -1,4 +1,5 @@
 ﻿@model Spice.Models.ViewModels.OrderListViewModel
+@using Spice.Utility
 @{
     ViewData["Title"] = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -9,7 +10,7 @@
 <div class="border">
     <div class="row">
         <div class="col-6">
-            <h2 class="text-info">Category List</h2>
+            <h2 class="text-info">Order List:</h2>
         </div>
         <div class="col-6 text-right">
             <partial name="_CreateButtonPartial" />
@@ -66,6 +67,12 @@
                     <button type="submit" class="btn btn-success anchorDetail" data-id="@item.OrderHeader.Id" data-toggle="modal">
                         <i class="far fa-list-alt"></i> Details
                     </button>
+                    @if (item.OrderHeader.Status == SD.StatusSubmitted || item.OrderHeader.Status == SD.StatusInProcess || item.OrderHeader.Status == SD.StatusCompleted || item.OrderHeader.Status == SD.StatusReady)
+                    {
+                        <button type="button" class="btn btn-info btnOrderStatus" data-id="@item.OrderHeader.Id" data-toggle="modal">
+                            <i class="far fa-clock"></i> Status
+                        </button>
+                    }
                 </td>
 
             </tr>
@@ -80,7 +87,7 @@
         }
         else
         {
-            <p>No Category Exists!</p>
+            <p>No Orders!</p>
         }
 
     </div>

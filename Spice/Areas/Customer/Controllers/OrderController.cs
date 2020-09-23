@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Spice.Data;
 using Spice.Models;
 using Spice.Models.ViewModels;
-using Spice.Models.VIewModels;
 using Spice.Utility;
 
 namespace Spice.Areas.Customer
@@ -165,6 +165,56 @@ namespace Spice.Areas.Customer
             orderHeader.Status = SD.StatusCancelled;
             await _db.SaveChangesAsync();
             return RedirectToAction("ManageOrder", "Order");
+        }
+
+        //---Order History
+        [Authorize]
+        public async Task<IActionResult> OrderPickup(int productPage = 1)
+        {
+            OrderListViewModel orderListVM = new OrderListViewModel()
+            {
+                Orders = new List<OrderDetailsViewModel>()
+            };
+
+            StringBuilder param = new StringBuilder();
+            param.Append("/Customer/Order/OrderPickup?productPage=:");
+
+            //---List of order details view model
+            //List<OrderDetailsViewModel> orderList = new List<OrderDetailsViewModel>();
+
+            //---List of orders retrieved
+            List<OrderHeader> OrderHeaderList = await _db.OrderHeader.
+                Include(o => o.ApplicationUser).
+                Where(u => u.Status == SD.StatusReady).
+                ToListAsync();
+
+            //---for each headers
+            foreach (OrderHeader item in OrderHeaderList)
+            {
+                OrderDetailsViewModel individual = new OrderDetailsViewModel
+                {
+                    OrderHeader = item,
+                    OrderDetails = await _db.OrderDetails.Where(o => o.OrderId == item.Id).ToListAsync()
+                };
+                //---Adding element to list
+                orderListVM.Orders.Add(individual);
+            }
+
+            var count = orderListVM.Orders.Count;
+            //---Sort
+            orderListVM.Orders = orderListVM.Orders.OrderByDescending(
+                p => p.OrderHeader.Id).Skip((productPage - 1) * PageSize)
+                .Take(PageSize).ToList();
+
+            orderListVM.PagingInfo = new PagingInfo
+            {
+                CurrentPage = productPage,
+                ItemsPerPage = PageSize,
+                TotalItem = count,
+                urlParam = param.ToString()
+            };
+
+            return View(orderListVM);
         }
 
     }
