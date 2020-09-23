@@ -109,22 +109,23 @@ namespace Spice.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     //---MXV Assign Roles
-                    if(!await _roleManager.RoleExistsAsync(SD.CustomerEndUser))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.CustomerEndUser));
-                    }
-                    if (!await _roleManager.RoleExistsAsync(SD.ManagerUser))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.ManagerUser));
-                    }
-                    if (!await _roleManager.RoleExistsAsync(SD.FrontDeskUser))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.FrontDeskUser));
-                    }
-                    if (!await _roleManager.RoleExistsAsync(SD.KitchenUser))
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole(SD.KitchenUser));
-                    }
+                    //---This cannot be done under production!
+                    //if(!await _roleManager.RoleExistsAsync(SD.CustomerEndUser))
+                    //{
+                    //    await _roleManager.CreateAsync(new IdentityRole(SD.CustomerEndUser));
+                    //}
+                    //if (!await _roleManager.RoleExistsAsync(SD.ManagerUser))
+                    //{
+                    //    await _roleManager.CreateAsync(new IdentityRole(SD.ManagerUser));
+                    //}
+                    //if (!await _roleManager.RoleExistsAsync(SD.FrontDeskUser))
+                    //{
+                    //    await _roleManager.CreateAsync(new IdentityRole(SD.FrontDeskUser));
+                    //}
+                    //if (!await _roleManager.RoleExistsAsync(SD.KitchenUser))
+                    //{
+                    //    await _roleManager.CreateAsync(new IdentityRole(SD.KitchenUser));
+                    //}
                     //---Manage and assigning the roles
                     if (role == SD.KitchenUser)
                     {

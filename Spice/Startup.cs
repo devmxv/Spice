@@ -48,6 +48,8 @@ namespace Spice
                 .AddDefaultTokenProviders()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+            //---mxv: DB Init
+            services.AddScoped<IDbInitializer, DbInitializer>();
             //---MXV: Stripe settings
             services.Configure<StripeSettings>(Configuration.GetSection("Stripe"));
 
@@ -83,7 +85,7 @@ namespace Spice
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IDbInitializer dbInitializer)
         {
             if (env.IsDevelopment())
             {
@@ -104,6 +106,8 @@ namespace Spice
             app.UseRouting();
             //---MXV: More Stripe config
             StripeConfiguration.SetApiKey(Configuration.GetSection("Stripe")["SecretKey"]);
+            //---MXV: Init
+            dbInitializer.Initialize();
             app.UseAuthentication();
             app.UseAuthorization();
 
