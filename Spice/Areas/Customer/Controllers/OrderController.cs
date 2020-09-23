@@ -169,7 +169,8 @@ namespace Spice.Areas.Customer
 
         //---Order History
         [Authorize]
-        public async Task<IActionResult> OrderPickup(int productPage = 1)
+        public async Task<IActionResult> OrderPickup(int productPage = 1, string searchEmail = null, 
+                        string searchPhone = null , string searchName = null)
         {
             OrderListViewModel orderListVM = new OrderListViewModel()
             {
@@ -177,29 +178,85 @@ namespace Spice.Areas.Customer
             };
 
             StringBuilder param = new StringBuilder();
+            //---string builder
             param.Append("/Customer/Order/OrderPickup?productPage=:");
+            //---this will append the values of the name, email and/or phone 
+            param.Append("&searchName=");
+            if(searchName != null)
+            {
+                param.Append(searchName);
+            }
+            param.Append("&searchEmail=");
+            if (searchEmail != null)
+            {
+                param.Append(searchEmail);
+            }
+            param.Append("&searchPhone=");
+            if (searchPhone != null)
+            {
+                param.Append(searchPhone);
+            }
 
-            //---List of order details view model
-            //List<OrderDetailsViewModel> orderList = new List<OrderDetailsViewModel>();
+            List<OrderHeader> OrderHeaderList = new List<OrderHeader>();
 
-            //---List of orders retrieved
-            List<OrderHeader> OrderHeaderList = await _db.OrderHeader.
-                Include(o => o.ApplicationUser).
-                Where(u => u.Status == SD.StatusReady).
-                ToListAsync();
+            if (searchName != null || searchEmail != null || searchPhone != null)
+            {
+                var user = new ApplicationUser();
+
+                if(searchName != null)
+                {
+                    OrderHeaderList = await _db.OrderHeader.Include(o => o.ApplicationUser)
+                        .Where(u => u.PickupName.ToLower().Contains(searchName.ToLower()))
+                        .OrderByDescending(o => o.OrderDate).ToListAsync();
+                }
+                else
+                {
+                    if (searchEmail != null)
+                    {
+                        //---User retrieved
+                        user = await _db.ApplicationUser.Where(u => u.Email.ToLower()
+                        .Contains(searchEmail.ToLower())).FirstOrDefaultAsync();
+
+                        OrderHeaderList = await _db.OrderHeader.Include(o => o.ApplicationUser)
+                            .Where(o => o.UserId == user.Id)
+                            .OrderByDescending(o => o.OrderDate).ToListAsync();
+                    }
+                    else
+                    {
+                        if (searchPhone != null)
+                        {
+                            OrderHeaderList = await _db.OrderHeader.Include(o => o.ApplicationUser)
+                                .Where(u => u.PhoneNumber.Contains(searchPhone))
+                                .OrderByDescending(o => o.OrderDate).ToListAsync();
+                        }
+                    }
+                }
+
+            } else
+            {
+                //---Default criteria
+                //---List of order details view model
+                //List<OrderDetailsViewModel> orderList = new List<OrderDetailsViewModel>();
+
+                //---List of orders retrieved
+                OrderHeaderList = await _db.OrderHeader.
+                    Include(o => o.ApplicationUser).
+                    Where(u => u.Status == SD.StatusReady).
+                    ToListAsync();
+            }
 
             //---for each headers
             foreach (OrderHeader item in OrderHeaderList)
-            {
-                OrderDetailsViewModel individual = new OrderDetailsViewModel
                 {
-                    OrderHeader = item,
-                    OrderDetails = await _db.OrderDetails.Where(o => o.OrderId == item.Id).ToListAsync()
-                };
-                //---Adding element to list
-                orderListVM.Orders.Add(individual);
-            }
-
+                    OrderDetailsViewModel individual = new OrderDetailsViewModel
+                    {
+                        OrderHeader = item,
+                        OrderDetails = await _db.OrderDetails.Where(o => o.OrderId == item.Id).ToListAsync()
+                    };
+                    //---Adding element to list
+                    orderListVM.Orders.Add(individual);
+                }
+            
             var count = orderListVM.Orders.Count;
             //---Sort
             orderListVM.Orders = orderListVM.Orders.OrderByDescending(
